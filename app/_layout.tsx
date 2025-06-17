@@ -4,6 +4,9 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+// Import HabitProvider (commented until it's properly fixed)
+// import { HabitProvider } from '@/context/HabitContext';
+
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
