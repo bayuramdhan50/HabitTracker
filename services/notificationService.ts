@@ -72,55 +72,74 @@ export const scheduleHabitReminder = async (habit: Habit) => {
     
     if (habit.frequency.type === 'daily') {
       // Schedule daily at the specified time
-      await Notifications.scheduleNotificationAsync({
-        content,
-        trigger: {
-          hour: hours,
-          minute: minutes,
-          repeats: true,
-        },
-        identifier,
-      });
-      return identifier;
-    } else if (habit.frequency.type === 'weekly' && habit.frequency.days) {
-      // Schedule for specified days of the week
-      // We need to create multiple notifications, one for each day
-      for (const day of habit.frequency.days) {
-        await Notifications.scheduleNotificationAsync({
-          content,
-          trigger: {
-            weekday: day + 1, // Expo uses 1-7 for weekdays (Sunday-Saturday)
-            hour: hours,
-            minute: minutes,
-            repeats: true,
-          },
-          identifier: `${identifier}-day-${day}`,
-        });
+      // Create a date object representing the next occurrence
+      const now = new Date();
+      const scheduledTime = new Date();
+      scheduledTime.setHours(hours, minutes, 0, 0);
+      
+      // If the scheduled time has already passed today, set it for tomorrow
+      if (scheduledTime <= now) {
+        scheduledTime.setDate(scheduledTime.getDate() + 1);
       }
-      return identifier;
-    } else if (habit.frequency.type === 'custom' && habit.frequency.customInterval) {
-      // For custom intervals, we'll schedule just for tomorrow and then reschedule when it's completed
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(hours);
-      tomorrow.setMinutes(minutes);
       
       await Notifications.scheduleNotificationAsync({
         content,
         trigger: {
-          date: tomorrow,
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 24 * 60 * 60, // 24 hours
+          repeats: true
         },
         identifier,
       });
-      return identifier;
-    } else {
+      return identifier;    } else if (habit.frequency.type === 'weekly' && habit.frequency.days) {
+      // Schedule for specified days of the week
+      // We need to create multiple notifications, one for each day
+      for (const day of habit.frequency.days) {
+        // Create a date object for the next occurrence of this day
+        const now = new Date();
+        const currentDay = now.getDay();
+        let daysUntilTarget = day - currentDay;
+        if (daysUntilTarget < 0) daysUntilTarget += 7;
+        
+        // If it's the same day but the time has passed, wait until next week
+        if (daysUntilTarget === 0) {
+          const targetTime = new Date();
+          targetTime.setHours(hours, minutes, 0, 0);
+          if (targetTime <= now) daysUntilTarget = 7;
+        }
+        
+        await Notifications.scheduleNotificationAsync({
+          content,
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds: 7 * 24 * 60 * 60, // 7 days
+            repeats: true
+          },
+          identifier: `${identifier}-day-${day}`,
+        });
+      }
+      return identifier;    } else if (habit.frequency.type === 'custom' && habit.frequency.customInterval) {
+      // For custom intervals
+      // Calculate seconds for the custom interval
+      const intervalSeconds = habit.frequency.customInterval * 24 * 60 * 60; // Convert days to seconds
+      
+      await Notifications.scheduleNotificationAsync({
+        content,
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: intervalSeconds,
+          repeats: true
+        },
+        identifier,
+      });
+      return identifier;} else {
       // Default to daily if frequency structure is not as expected
       await Notifications.scheduleNotificationAsync({
         content,
         trigger: {
-          hour: hours,
-          minute: minutes,
-          repeats: true,
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 24 * 60 * 60, // 24 hours
+          repeats: true
         },
         identifier,
       });
