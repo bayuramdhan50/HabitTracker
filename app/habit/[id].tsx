@@ -3,51 +3,55 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
+import CalendarView from '@/components/habits/CalendarView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
+import { useHabits } from '@/context/HabitContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-// import { useHabits } from '@/context/HabitContext';
-import CalendarView from '@/components/habits/CalendarView';
 import { Habit } from '@/types/habit';
 
 export default function HabitDetailScreen() {
   const colorScheme = useColorScheme();
-  const router = useRouter();
-  const { id } = useLocalSearchParams();
-  // const { getHabitById, getStreak, getStatistics } = useHabits();
+  const router = useRouter();  const { id } = useLocalSearchParams();
+  const { getHabitById, getStreak, getStatistics } = useHabits();
   
   const [habit, setHabit] = useState<Habit | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [streak, setStreak] = useState({ current: 0, longest: 0 });
   const [completionRate, setCompletionRate] = useState(0);
-
-  // Temporary data for testing
+  // Load habit data from context
   useEffect(() => {
-    // This would normally be fetched from context
-    if (id) {
-      setHabit({
-        id: String(id),
-        name: 'Daily Exercise',
-        description: 'At least 30 minutes of cardio exercise',
-        color: '#4CD964',
-        icon: 'figure.walk',
-        frequency: {
-          type: 'daily',
-        },
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-      
-      setStreak({
-        current: 5,
-        longest: 12,
-      });
-      
-      setCompletionRate(0.75);
-    }
-  }, [id]);
+    const loadHabitData = async () => {
+      if (id) {
+        const habitData = getHabitById(String(id));
+        if (habitData) {
+          setHabit(habitData);
+          
+          // Get streak data
+          const streakData = await getStreak(String(id));
+          if (streakData) {
+            setStreak({
+              current: streakData.currentStreak,
+              longest: streakData.longestStreak,
+            });
+          }
+          
+          // Get statistics data
+          const statsData = await getStatistics(String(id));
+          if (statsData) {
+            setCompletionRate(statsData.completionRate);
+          }
+        } else {
+          // Handle case where habit isn't found
+          router.back();
+        }
+      }
+    };
+    
+    loadHabitData();
+  }, [id, getHabitById, getStreak, getStatistics, router]);
 
   // This would be used when the context is ready
   /*

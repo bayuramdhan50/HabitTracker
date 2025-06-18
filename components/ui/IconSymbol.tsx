@@ -1,7 +1,7 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
@@ -31,11 +31,13 @@ export function IconSymbol({
   color,
   style,
 }: {
-  name: IconSymbolName;
+  name: string; // Accept any string
   size?: number;
   color: string | OpaqueColorValue;
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  // Fallback to a default icon if the name isn't in mapping
+  const iconName = MAPPING[name as IconSymbolName] || 'check-circle';
+  return <MaterialIcons color={color} size={size} name={iconName} style={style} />;
 }

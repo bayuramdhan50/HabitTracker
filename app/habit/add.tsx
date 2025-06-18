@@ -7,8 +7,8 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
+import { useHabits } from '@/context/HabitContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
-// import { useHabits } from '@/context/HabitContext';
 
 const DAYS_OF_WEEK = [
   { id: 0, name: 'Sun' },
@@ -56,7 +56,7 @@ const ICONS = [
 export default function AddHabitScreen() {
   const colorScheme = useColorScheme();
   const router = useRouter();
-  // const { addHabit } = useHabits();
+  const { addHabit } = useHabits();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -100,10 +100,8 @@ export default function AddHabitScreen() {
           customInterval: frequencyType === 'custom' ? parseInt(customInterval, 10) : undefined,
         },
         reminderTime: reminderEnabled ? reminderTime : undefined,
-      };
-
-      // When context is implemented, uncomment this
-      // await addHabit(newHabit);
+      };      // Add the habit using the context
+      await addHabit(newHabit);
       console.log('New habit created:', newHabit);
       
       Alert.alert('Success', 'Habit created successfully!', [

@@ -1,10 +1,11 @@
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { useHabits } from '@/context/HabitContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Habit } from '@/types/habit';
+import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-// import { useHabits } from '@/context/HabitContext';
 
 interface HabitCardProps {
   habit: Habit;
@@ -12,15 +13,23 @@ interface HabitCardProps {
   onPress?: () => void;
 }
 
-export default function HabitCard({ habit, date, onPress }: HabitCardProps) {
-  const colorScheme = useColorScheme();
-  // const { isHabitCompletedOnDate, toggleHabitCompletion } = useHabits();
+export default function HabitCard({ habit, date, onPress }: HabitCardProps) {  const colorScheme = useColorScheme();
+  const { isHabitCompletedOnDate, toggleHabitCompletion } = useHabits();
   
-  // Temporary state until context is working
-  const isCompleted = false;
-
+  // Use state to track completion status
+  const [isCompleted, setIsCompleted] = useState(false);
+  
+  // Load completion status
+  useEffect(() => {
+    const checkCompletion = async () => {
+      const completed = await isHabitCompletedOnDate(habit.id, date);
+      setIsCompleted(completed);
+    };
+    checkCompletion();
+  }, [habit.id, date, isHabitCompletedOnDate]);
   const handleToggleCompletion = async () => {
-    // await toggleHabitCompletion(habit.id, date);
+    await toggleHabitCompletion(habit.id, date);
+    setIsCompleted(!isCompleted);
     console.log('Toggle completion for', habit.id, 'on', date);
   };
 

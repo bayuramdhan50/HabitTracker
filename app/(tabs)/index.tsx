@@ -9,27 +9,25 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-// Temporarily commented out the HabitContext until it's fully implemented
-// import { useHabits } from '@/context/HabitContext';
-// import HabitCard from '@/components/habits/HabitCard';
-// import CalendarView from '@/components/habits/CalendarView';
+// Import HabitContext and components
+import { useHabits } from '@/context/HabitContext';
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
-  // const { habits, refreshHabits } = useHabits();
+  const { habits, refreshHabits } = useHabits();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD
   const [refreshing, setRefreshing] = useState(false);
   const isFocused = useIsFocused();
 
   useFocusEffect(
     useCallback(() => {
-      // refreshHabits();
-    }, [])
+      refreshHabits();
+    }, [refreshHabits])
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // await refreshHabits();
+    await refreshHabits();
     setRefreshing(false);
   };
 

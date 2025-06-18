@@ -1,16 +1,15 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Alert } from 'react-native';
 import {
-    deleteHabit,
-    getHabitLogs,
-    getHabits,
-    getHabitStatistics,
-    getHabitStreak,
-    saveHabit,
-    saveHabitLog,
+  deleteHabit,
+  getHabitLogs,
+  getHabits,
+  getHabitStatistics,
+  getHabitStreak,
+  saveHabit,
+  saveHabitLog,
 } from '../services/habitStorage';
-// Temporarily disable notification service
-// import * as NotificationService from '../services/notificationService';
+import * as NotificationService from '../services/notificationService';
 import { Habit, HabitLog, HabitStatistics, HabitStreak } from '../types/habit';
 
 interface HabitContextType {
@@ -34,12 +33,10 @@ const HabitContext = createContext<HabitContextType | undefined>(undefined);
 export function HabitProvider({ children }: { children: ReactNode }) {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [habitLogs, setHabitLogs] = useState<HabitLog[]>([]);
-  // Initialize the context and load habits
+  const [habitLogs, setHabitLogs] = useState<HabitLog[]>([]);  // Initialize the context and load habits
   useEffect(() => {
     refreshHabits();
-    // Temporarily disable notification service
-    // registerForPushNotificationsAsync();
+    NotificationService.registerForPushNotificationsAsync();
     loadAllHabitLogs();
   }, []);
 
@@ -81,15 +78,12 @@ export function HabitProvider({ children }: { children: ReactNode }) {
         id: `habit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-      };
-
-      const success = await saveHabit(newHabit);
+      };      const success = await saveHabit(newHabit);
         if (success) {
-        // Temporarily disable notification service
-        // // Schedule notification if reminder is set
-        // if (newHabit.reminderTime) {
-        //   await scheduleHabitReminder(newHabit);
-        // }
+        // Schedule notification if reminder is set
+        if (newHabit.reminderTime) {
+          await NotificationService.scheduleHabitReminder(newHabit);
+        }
         
         await refreshHabits();
         return newHabit;
@@ -101,19 +95,17 @@ export function HabitProvider({ children }: { children: ReactNode }) {
       return null;
     }
   };
-
   // Update an existing habit
   const updateHabit = async (habit: Habit) => {
     try {
       const success = await saveHabit(habit);
         if (success) {
-        // Temporarily disable notification service
-        // // Update notification if reminder is set
-        // if (habit.reminderTime) {
-        //   await scheduleHabitReminder(habit);
-        // } else {
-        //   await cancelHabitReminder(habit.id);
-        // }
+        // Update notification if reminder is set
+        if (habit.reminderTime) {
+          await NotificationService.scheduleHabitReminder(habit);
+        } else {
+          await NotificationService.cancelHabitReminder(habit.id);
+        }
         
         await refreshHabits();
       }
@@ -125,12 +117,11 @@ export function HabitProvider({ children }: { children: ReactNode }) {
       return false;
     }
   };
-
   // Remove a habit
   const removeHabit = async (id: string) => {
-    try {      // Temporarily disable notification service
-      // // Cancel any scheduled notifications
-      // await cancelHabitReminder(id);
+    try {
+      // Cancel any scheduled notifications
+      await NotificationService.cancelHabitReminder(id);
       
       const success = await deleteHabit(id);
       
